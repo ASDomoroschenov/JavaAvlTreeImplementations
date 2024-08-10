@@ -4,7 +4,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import ru.mai.associative_container.AssociativeContainer;
 
 import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.Objects;
 
 public class AvlTreeFactor<K extends Comparable<K>, V> implements AssociativeContainer<K, V> {
@@ -97,22 +96,22 @@ public class AvlTreeFactor<K extends Comparable<K>, V> implements AssociativeCon
 
     private NodeFactor<K, V> root;
 
+
     @Override
-    public void insert(K key, V value) {
+    public boolean insert(K key, V value) {
         if (this.root == null) {
             this.root = new NodeFactor<>(key, value);
-            return;
+            return true;
         }
 
-        NodeFactor<K, V> q = null;
-        NodeFactor<K, V> s = this.root;
         NodeFactor<K, V> p = this.root;
-        boolean isInserted = false;
-        boolean insertInLeftSubtree = false;
+        NodeFactor<K, V> s = this.root;
+        NodeFactor<K, V> q = null;
+        boolean insert = false;
 
-        while (!isInserted) {
-            if (key.compareTo(p.getKey()) == 0) {
-                return;
+        while (!insert) {
+            if (key.equals(p.getKey())) {
+                return false;
             }
 
             if (key.compareTo(p.getKey()) < 0) {
@@ -122,11 +121,10 @@ public class AvlTreeFactor<K extends Comparable<K>, V> implements AssociativeCon
                     q = new NodeFactor<>(key, value);
                     q.setParent(p);
                     p.setLeftSubtree(q);
-                    isInserted = true;
-                    insertInLeftSubtree = true;
+                    insert = true;
                 } else {
-                    if (p.getFactor() != 0) {
-                        s = p;
+                    if (q.getFactor() != 0) {
+                        s = q;
                     }
                     p = q;
                 }
@@ -137,17 +135,121 @@ public class AvlTreeFactor<K extends Comparable<K>, V> implements AssociativeCon
                     q = new NodeFactor<>(key, value);
                     q.setParent(p);
                     p.setRightSubtree(q);
-                    isInserted = true;
+                    insert = true;
                 } else {
-                    if (p.getFactor() != 0) {
-                        s = p;
+                    if (q.getFactor() != 0) {
+                        s = q;
                     }
                     p = q;
                 }
             }
         }
 
-        balance(key, s, q, insertInLeftSubtree);
+        if (key.compareTo(s.getKey()) < 0) { // a = -1
+            NodeFactor<K, V> r = s.getLeftSubtree();
+            p = s.getLeftSubtree();
+
+            while (!p.getKey().equals(q.getKey())) {
+                if (key.compareTo(p.getKey()) < 0) {
+                    p.setFactor(-1);
+                    p = p.getLeftSubtree();
+                } else {
+                    p.setFactor(1);
+                    p = p.getRightSubtree();
+                }
+            }
+
+            if (s.getFactor() == 0) {
+                s.setFactor(-1);
+            } else if (s.getFactor() == 1) {
+                s.setFactor(0);
+            } else if (s.getFactor() == -1) {
+                if (r.getFactor() == -1) {
+                    NodeFactor<K, V> rightRotate = rightRotate(s);
+                    rightRotate.setFactor(0);
+                    rightRotate.getRightSubtree().setFactor(0);
+                } else if (r.getFactor() == 1) {
+                    if (r.getRightSubtree().getFactor() == 1) {
+                        NodeFactor<K, V> leftRotate = leftRotate(r);
+                        leftRotate.setFactor(-1);
+                        leftRotate.getLeftSubtree().setFactor(-1);
+
+                        NodeFactor<K, V> rightRotate = rightRotate(s);
+                        rightRotate.setFactor(0);
+                        rightRotate.getRightSubtree().setFactor(0);
+                    } else if (r.getRightSubtree().getFactor() == -1) {
+                        NodeFactor<K, V> leftRotate = leftRotate(r);
+                        leftRotate.setFactor(-1);
+                        leftRotate.getLeftSubtree().setFactor(0);
+
+                        NodeFactor<K, V> rightRotate = rightRotate(s);
+                        rightRotate.setFactor(0);
+                        rightRotate.getRightSubtree().setFactor(1);
+                    } else if (r.getRightSubtree().getFactor() == 0) {
+                        NodeFactor<K, V> leftRotate = leftRotate(r);
+                        leftRotate.setFactor(-1);
+                        leftRotate.getLeftSubtree().setFactor(0);
+
+                        NodeFactor<K, V> rightRotate = rightRotate(s);
+                        rightRotate.setFactor(0);
+                        rightRotate.getRightSubtree().setFactor(0);
+                    }
+                }
+            }
+        } else { // a = 1
+            NodeFactor<K, V> r = s.getRightSubtree();
+            p = s.getRightSubtree();
+
+            while (!p.getKey().equals(q.getKey())) {
+                if (key.compareTo(p.getKey()) < 0) {
+                    p.setFactor(-1);
+                    p = p.getLeftSubtree();
+                } else {
+                    p.setFactor(1);
+                    p = p.getRightSubtree();
+                }
+            }
+
+            if (s.getFactor() == 0) {
+                s.setFactor(1);
+            } else if (s.getFactor() == -1) {
+                s.setFactor(0);
+            } else if (s.getFactor() == 1) {
+                if (r.getFactor() == 1) {
+                    NodeFactor<K, V> rotate = leftRotate(s);
+                    rotate.setFactor(0);
+                    rotate.getLeftSubtree().setFactor(0);
+                } else {
+                    if (r.getLeftSubtree().getFactor() == -1) {
+                        NodeFactor<K, V> rightRotate = rightRotate(r);
+                        rightRotate.setFactor(1);
+                        rightRotate.getRightSubtree().setFactor(1);
+
+                        NodeFactor<K, V> leftRotate = leftRotate(s);
+                        leftRotate.setFactor(0);
+                        leftRotate.getLeftSubtree().setFactor(0);
+                    } else if (r.getLeftSubtree().getFactor() == 1) {
+                        NodeFactor<K, V> rightRotate = rightRotate(r);
+                        rightRotate.setFactor(1);
+                        rightRotate.getRightSubtree().setFactor(0);
+
+                        NodeFactor<K, V> leftRotate = leftRotate(s);
+                        leftRotate.setFactor(0);
+                        leftRotate.getLeftSubtree().setFactor(-1);
+                    } else if (r.getLeftSubtree().getFactor() == 0) {
+                        NodeFactor<K, V> rightRotate = rightRotate(r);
+                        rightRotate.setFactor(1);
+                        rightRotate.getRightSubtree().setFactor(0);
+
+                        NodeFactor<K, V> leftRotate = leftRotate(s);
+                        leftRotate.setFactor(0);
+                        leftRotate.getLeftSubtree().setFactor(0);
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     @Override
@@ -189,295 +291,213 @@ public class AvlTreeFactor<K extends Comparable<K>, V> implements AssociativeCon
 
     @Override
     public void delete(K key) {
-        Deque<Pair<Integer, NodeFactor<K, V>>> path = new ArrayDeque<>();
-        NodeFactor<K, V> currentSubtree = this.root;
+        ArrayDeque<Pair<Integer, NodeFactor<K, V>>> path = new ArrayDeque<>();
+        NodeFactor<K, V> currentNode = this.root;
 
-        currentSubtree = getNodeWithPath(key, path, currentSubtree);
+        while (currentNode.getKey().compareTo(key) != 0) {
+            int compare = key.compareTo(currentNode.getKey());
 
-        if (currentSubtree == null) {
-            return;
+            path.push(Pair.of(compare, currentNode));
+
+            if (compare > 0) {
+                currentNode = currentNode.getRightSubtree();
+            } else {
+                currentNode = currentNode.getLeftSubtree();
+            }
         }
 
-        if (currentSubtree.getLeftSubtree() == null && currentSubtree.getRightSubtree() == null) {
-            NodeFactor<K, V> parent = currentSubtree.getParent();
+        if (currentNode.getRightSubtree() == null && currentNode.getLeftSubtree() == null) {
+            deleteLeaf(path, currentNode);
+        } else {
+            NodeFactor<K, V> nodeToSwap = currentNode;
 
-            if (parent != null) {
-                if (parent.getLeftSubtree() == currentSubtree) {
-                    parent.setLeftSubtree(null);
-                } else {
-                    parent.setRightSubtree(null);
+            if (currentNode.getRightSubtree() == null && currentNode.getLeftSubtree() != null) {
+                currentNode = currentNode.getLeftSubtree();
+
+                while (currentNode.getRightSubtree() != null) {
+                    currentNode = currentNode.getRightSubtree();
                 }
+            } else {
+                currentNode = currentNode.getRightSubtree();
+
+                while (currentNode.getLeftSubtree() != null) {
+                    currentNode = currentNode.getLeftSubtree();
+                }
+            }
+
+            K currentNodeKey = currentNode.getKey();
+            V currentNodeValue = currentNode.getValue();
+
+            delete(currentNode.getKey());
+
+            nodeToSwap.setKey(currentNodeKey);
+            nodeToSwap.setValue(currentNodeValue);
+        }
+    }
+
+    private void deleteLeaf(ArrayDeque<Pair<Integer, NodeFactor<K, V>>> path, NodeFactor<K, V> leafToDelete) {
+        NodeFactor<K, V> currentNodeParent = leafToDelete.getParent();
+
+        if (currentNodeParent != null) {
+            if (currentNodeParent.getLeftSubtree() == leafToDelete) {
+                currentNodeParent.setLeftSubtree(null);
+            } else {
+                currentNodeParent.setRightSubtree(null);
             }
 
             balanceAfterDeleteLeaf(path);
         } else {
-            if (currentSubtree.getRightSubtree() == null) {
-                NodeFactor<K, V> leftSubtree = currentSubtree.getLeftSubtree();
-                deleteLeaf(path, currentSubtree, leftSubtree);
-            } else if (currentSubtree.getLeftSubtree() == null) {
-                NodeFactor<K, V> rightSubtree = currentSubtree.getRightSubtree();
-                deleteLeaf(path, currentSubtree, rightSubtree);
-            } else {
-                NodeFactor<K, V> successor = currentSubtree.getRightSubtree();
-
-                while (successor.getLeftSubtree() != null) {
-                    successor = successor.getLeftSubtree();
-                }
-
-                deleteLeaf(path, currentSubtree, successor);
-            }
+            this.root = null;
         }
     }
 
-    private void deleteLeaf(Deque<Pair<Integer, NodeFactor<K, V>>> path, NodeFactor<K, V> currentSubtree, NodeFactor<K, V> leftSubtree) {
-        K leftSubtreeKey = leftSubtree.getKey();
-        V leftSubtreeValue = leftSubtree.getValue();
-
-        leftSubtree.setKey(currentSubtree.getKey());
-        leftSubtree.setValue(currentSubtree.getValue());
-
-        currentSubtree.setKey(leftSubtreeKey);
-        currentSubtree.setValue(leftSubtreeValue);
-
-        deleteLeafInner(leftSubtree.getKey(), path, currentSubtree);
-    }
-
-    private void deleteLeafInner(K key, Deque<Pair<Integer, NodeFactor<K, V>>> path, NodeFactor<K, V> subtree) {
-        NodeFactor<K, V> currentSubtree = subtree;
-
-        currentSubtree = getNodeWithPath(key, path, currentSubtree);
-        if (currentSubtree == null) return;
-
-        NodeFactor<K, V> parent = currentSubtree.getParent();
-
-        if (parent != null) {
-            if (parent.getLeftSubtree() == currentSubtree) {
-                parent.setLeftSubtree(null);
-            } else {
-                parent.setRightSubtree(null);
-            }
-        }
-
-        balanceAfterDeleteLeaf(path);
-    }
-
-    private NodeFactor<K, V> getNodeWithPath(K key, Deque<Pair<Integer, NodeFactor<K, V>>> path, NodeFactor<K, V> currentSubtree) {
-        while (currentSubtree != null && !currentSubtree.getKey().equals(key)) {
-            if (key.compareTo(currentSubtree.getKey()) < 0) {
-                path.push(Pair.of(-1, currentSubtree));
-                currentSubtree = currentSubtree.getLeftSubtree();
-            } else {
-                path.push(Pair.of(1, currentSubtree));
-                currentSubtree = currentSubtree.getRightSubtree();
-            }
-        }
-
-        return currentSubtree;
-    }
-
-    private void balanceAfterDeleteLeaf(Deque<Pair<Integer, NodeFactor<K, V>>> path) {
+    private void balanceAfterDeleteLeaf(ArrayDeque<Pair<Integer, NodeFactor<K, V>>> path) {
         if (path.isEmpty()) {
             return;
         }
 
-        Pair<Integer, NodeFactor<K, V>> topPath = path.pop();
+        Pair<Integer, NodeFactor<K, V>> pathTop = path.pop();
+        int a = pathTop.getLeft();
+        NodeFactor<K, V> currentNode = pathTop.getValue();
 
-        if (topPath.getLeft() == topPath.getRight().getFactor()) {
-            topPath.getRight().setFactor(0);
-            balanceAfterDeleteLeaf(path);
-        } else if (topPath.getRight().getFactor() == 0) {
-            topPath.getRight().setFactor(-topPath.getLeft());
-        } else if (topPath.getLeft() == -topPath.getRight().getFactor()) {
-            if (topPath.getRight().getFactor() == -1) {
-                NodeFactor<K, V> leftSubtree = topPath.getRight().getLeftSubtree();
+        if (a == -1) {
+            if (currentNode.getFactor() == 0) {
+                currentNode.setFactor(1);
+            } else if (currentNode.getFactor() == -1) {
+                currentNode.setFactor(0);
+                balanceAfterDeleteLeaf(path);
+            } else if (currentNode.getFactor() == 1) {
+                NodeFactor<K, V> rightSubtree = currentNode.getRightSubtree();
 
-                if (leftSubtree.getFactor() == 0) {
-                    NodeFactor<K, V> parent = topPath.getRight().getParent();
-                    boolean inLeftSubtree = parent != null && parent.getLeftSubtree() == topPath.getRight();
-                    NodeFactor<K, V> rotate = rightRotate(topPath.getRight());
+                if (rightSubtree.getFactor() == 1) {
+                    NodeFactor<K, V> leftRotate = leftRotate(currentNode);
+                    leftRotate.setFactor(0);
+                    leftRotate.getLeftSubtree().setFactor(0);
+                    balanceAfterDeleteLeaf(path);
+                } else if (rightSubtree.getFactor() == -1) {
+                    int rightSubtreeLeftSubtreeFactor = rightSubtree.getLeftSubtree().getFactor();
+                    NodeFactor<K, V> rightRotate = rightRotate(rightSubtree);
+                    rightRotate.setFactor(0);
 
-                    rotate.setFactor(1);
-                    rotate.getRightSubtree().setFactor(-1);
-
-                    if (parent != null) {
-                        if (inLeftSubtree) {
-                            parent.setLeftSubtree(rotate);
-                        } else {
-                            parent.setRightSubtree(rotate);
-                        }
-                    }
-                } else {
-                    NodeFactor<K, V> subtree = leftSubtree.getLeftSubtree();
-
-                    if (subtree == null) {
-                        subtree = leftSubtree.getRightSubtree();
-                        balance(subtree.getKey(), topPath.getRight(), subtree, false);
-                    } else {
-                        balance(subtree.getKey(), topPath.getRight(), subtree, true);
-                    }
-                }
-            } else {
-                NodeFactor<K, V> rightSubtree = topPath.getRight().getRightSubtree();
-
-                if (rightSubtree.getFactor() == 0) {
-                    NodeFactor<K, V> parent = topPath.getRight().getParent();
-                    boolean inLeftSubtree = parent != null && parent.getLeftSubtree() == topPath.getRight();
-                    NodeFactor<K, V> rotate = leftRotate(topPath.getRight());
-
-                    rotate.setFactor(-1);
-                    rotate.getLeftSubtree().setFactor(1);
-
-                    if (parent != null) {
-                        if (inLeftSubtree) {
-                            parent.setLeftSubtree(rotate);
-                        } else {
-                            parent.setRightSubtree(rotate);
-                        }
-                    }
-                } else {
-                    NodeFactor<K, V> subtree = rightSubtree.getRightSubtree();
-
-                    if (subtree == null) {
-                        subtree = rightSubtree.getLeftSubtree();
-                        balance(subtree.getKey(), topPath.getRight(), subtree, true);
-                    } else {
-                        balance(subtree.getKey(), topPath.getRight(), subtree, false);
-                    }
-                }
-            }
-        }
-    }
-
-    private void balance(K key, NodeFactor<K, V> s, NodeFactor<K, V> q, boolean insertInLeftSubtree) {
-        NodeFactor<K, V> p;
-        if (key.compareTo(s.getKey()) < 0) {
-            NodeFactor<K, V> r = s.getLeftSubtree();
-            p = s.getLeftSubtree();
-
-            while (p != q) {
-                if (key.compareTo(p.getKey()) < 0) {
-                    p.setFactor(-1);
-                    p = p.getLeftSubtree();
-                } else {
-                    p.setFactor(1);
-                    p = p.getRightSubtree();
-                }
-            }
-
-            if (s.getFactor() == 1) {
-                s.setFactor(0);
-            } else {
-                if (r.getFactor() == -1) {
-                    rightRotateAndBalance(s);
-                } else if (r.getFactor() == 1) {
-                    NodeFactor<K, V> rotateR = leftRotate(r);
-
-                    if (insertInLeftSubtree) {
-                        rotateR.getLeftSubtree().setFactor(0);
-                    } else {
-                        rotateR.getLeftSubtree().setFactor(-1);
+                    if (rightSubtreeLeftSubtreeFactor == -1) {
+                        rightRotate.getRightSubtree().setFactor(1);
+                        NodeFactor<K, V> leftRotate = leftRotate(currentNode);
+                        leftRotate.setFactor(0);
+                        leftRotate.getLeftSubtree().setFactor(0);
+                    } else if (rightSubtreeLeftSubtreeFactor == 1) {
+                        rightRotate.getRightSubtree().setFactor(0);
+                        NodeFactor<K, V> leftRotate = leftRotate(currentNode);
+                        leftRotate.setFactor(0);
+                        leftRotate.getLeftSubtree().setFactor(-1);
+                    } else if (rightSubtreeLeftSubtreeFactor == 0) {
+                        rightRotate.getRightSubtree().setFactor(0);
+                        NodeFactor<K, V> leftRotate = leftRotate(currentNode);
+                        leftRotate.setFactor(0);
+                        leftRotate.getLeftSubtree().setFactor(0);
                     }
 
-                    s.setLeftSubtree(rotateR);
-
-                    rightRotateAndBalance(s);
+                    balanceAfterDeleteLeaf(path);
+                } else if (rightSubtree.getFactor() == 0) {
+                    NodeFactor<K, V> leftRotate = leftRotate(currentNode);
+                    leftRotate.setFactor(-1);
+                    leftRotate.getLeftSubtree().setFactor(1);
                 }
             }
         } else {
-            NodeFactor<K, V> r = s.getRightSubtree();
-            p = s.getRightSubtree();
+            if (currentNode.getFactor() == 0) {
+                currentNode.setFactor(-1);
+            } else if (currentNode.getFactor() == 1) {
+                currentNode.setFactor(0);
+                balanceAfterDeleteLeaf(path);
+            } else if (currentNode.getFactor() == -1) {
+                NodeFactor<K, V> leftSubtree = currentNode.getLeftSubtree();
 
-            while (p != q) {
-                if (key.compareTo(p.getKey()) < 0) {
-                    p.setFactor(-1);
-                    p = p.getLeftSubtree();
-                } else {
-                    p.setFactor(1);
-                    p = p.getRightSubtree();
-                }
-            }
+                if (leftSubtree.getFactor() == -1) {
+                    NodeFactor<K, V> rightRotate = rightRotate(currentNode);
+                    rightRotate.setFactor(0);
+                    rightRotate.getRightSubtree().setFactor(0);
+                    balanceAfterDeleteLeaf(path);
+                } else if (leftSubtree.getFactor() == 1) {
+                    int leftSubtreeRightSubtreeFactor = leftSubtree.getRightSubtree().getFactor();
+                    NodeFactor<K, V> leftRotate = leftRotate(leftSubtree);
+                    leftRotate.setFactor(0);
 
-            if (s.getFactor() == -1) {
-                s.setFactor(0);
-            } else {
-                if (r.getFactor() == 1) {
-                    leftRotateAndBalance(s);
-                } else if (r.getFactor() == -1) {
-                    NodeFactor<K, V> rotateR = rightRotate(r);
-
-                    if (!insertInLeftSubtree) {
-                        rotateR.getRightSubtree().setFactor(0);
-                    } else {
-                        rotateR.getRightSubtree().setFactor(1);
+                    if (leftSubtreeRightSubtreeFactor == 1) {
+                        leftRotate.getLeftSubtree().setFactor(-1);
+                        NodeFactor<K, V> rightRotate = rightRotate(currentNode);
+                        rightRotate.setFactor(0);
+                        rightRotate.getRightSubtree().setFactor(0);
+                    } else if (leftSubtreeRightSubtreeFactor == -1) {
+                        leftRotate.getLeftSubtree().setFactor(0);
+                        NodeFactor<K, V> rightRotate = rightRotate(currentNode);
+                        rightRotate.setFactor(0);
+                        rightRotate.getRightSubtree().setFactor(1);
+                    } else if (leftSubtreeRightSubtreeFactor == 0) {
+                        leftRotate.getLeftSubtree().setFactor(0);
+                        NodeFactor<K, V> rightRotate = rightRotate(currentNode);
+                        rightRotate.setFactor(0);
+                        rightRotate.getRightSubtree().setFactor(0);
                     }
 
-                    s.setRightSubtree(rotateR);
-
-                    leftRotateAndBalance(s);
+                    balanceAfterDeleteLeaf(path);
+                } else if (leftSubtree.getFactor() == 0) {
+                    NodeFactor<K, V> rightRotate = rightRotate(currentNode);
+                    rightRotate.setFactor(1);
+                    rightRotate.getRightSubtree().setFactor(-1);
                 }
-            }
-        }
-    }
-
-    private void rightRotateAndBalance(NodeFactor<K, V> s) {
-        NodeFactor<K, V> parent = s.getParent();
-        boolean isLeftSubtree = parent != null && parent.getLeftSubtree() == s;
-
-        NodeFactor<K, V> rotate = rightRotate(s);
-        rotate.setFactor(0);
-        rotate.getRightSubtree().setFactor(0);
-
-        if (parent != null) {
-            if (isLeftSubtree) {
-                parent.setLeftSubtree(rotate);
-            } else {
-                parent.setRightSubtree(rotate);
-            }
-        }
-    }
-
-    private void leftRotateAndBalance(NodeFactor<K, V> s) {
-        NodeFactor<K, V> parent = s.getParent();
-        boolean isRightSubtree = parent != null && parent.getRightSubtree() == s;
-
-        NodeFactor<K, V> rotate = leftRotate(s);
-        rotate.setFactor(0);
-        rotate.getLeftSubtree().setFactor(0);
-
-        if (parent != null) {
-            if (isRightSubtree) {
-                parent.setRightSubtree(rotate);
-            } else {
-                parent.setLeftSubtree(rotate);
             }
         }
     }
 
     private NodeFactor<K, V> leftRotate(NodeFactor<K, V> subtree) {
+        NodeFactor<K, V> parentSubtree = subtree.getParent();
         NodeFactor<K, V> rightSubtree = subtree.getRightSubtree();
-        subtree.setRightSubtree(rightSubtree.getLeftSubtree());
+
+        if (parentSubtree != null) {
+            if (parentSubtree.getLeftSubtree() == subtree) {
+                parentSubtree.setLeftSubtree(rightSubtree);
+            } else {
+                parentSubtree.setRightSubtree(rightSubtree);
+            }
+        } else {
+            this.root = rightSubtree;
+        }
+
+        rightSubtree.setParent(parentSubtree);
 
         if (rightSubtree.getLeftSubtree() != null) {
             rightSubtree.getLeftSubtree().setParent(subtree);
         }
 
+        subtree.setRightSubtree(rightSubtree.getLeftSubtree());
         rightSubtree.setLeftSubtree(subtree);
-        rightSubtree.setParent(subtree.getParent());
         subtree.setParent(rightSubtree);
 
         return rightSubtree;
     }
 
     private NodeFactor<K, V> rightRotate(NodeFactor<K, V> subtree) {
+        NodeFactor<K, V> parentSubtree = subtree.getParent();
         NodeFactor<K, V> leftSubtree = subtree.getLeftSubtree();
-        subtree.setLeftSubtree(leftSubtree.getRightSubtree());
+
+        if (parentSubtree != null) {
+            if (parentSubtree.getLeftSubtree() == subtree) {
+                parentSubtree.setLeftSubtree(leftSubtree);
+            } else {
+                parentSubtree.setRightSubtree(leftSubtree);
+            }
+        } else {
+            this.root = leftSubtree;
+        }
+
+        leftSubtree.setParent(parentSubtree);
 
         if (leftSubtree.getRightSubtree() != null) {
             leftSubtree.getRightSubtree().setParent(subtree);
         }
 
+        subtree.setLeftSubtree(leftSubtree.getRightSubtree());
         leftSubtree.setRightSubtree(subtree);
-        leftSubtree.setParent(subtree.getParent());
         subtree.setParent(leftSubtree);
 
         return leftSubtree;

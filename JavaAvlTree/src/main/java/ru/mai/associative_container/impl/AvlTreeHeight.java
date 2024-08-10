@@ -96,10 +96,10 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
     private NodeHeight<K, V> root;
 
     @Override
-    public void insert(K key, V value) {
+    public boolean insert(K key, V value) {
         if (this.root == null) {
             this.root = new NodeHeight<>(key, value, 0);
-            return;
+            return true;
         }
 
         int compare;
@@ -112,7 +112,7 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
             compare = currentSubtree.getKey().compareTo(key);
 
             if (compare == 0) {
-                return;
+                return false;
             } else if (compare > 0) {
                 currentSubtree = currentSubtree.getLeftSubtree();
             } else {
@@ -130,6 +130,8 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
         }
 
         balance(nodeToInsert);
+
+        return true;
     }
 
     @Override
@@ -171,6 +173,10 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
 
     @Override
     public void delete(K key) {
+        if (this.root.getLeftSubtree() == null && this.root.getRightSubtree() == null) {
+            System.out.println("LAST");
+        }
+
         NodeHeight<K, V> nodeToDelete = this.root;
         NodeHeight<K, V> parent = null;
 
@@ -277,6 +283,7 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
 
     private NodeHeight<K, V> leftRotate(NodeHeight<K, V> subtree) {
         NodeHeight<K, V> rightSubtree = subtree.getRightSubtree();
+
         subtree.setRightSubtree(rightSubtree.getLeftSubtree());
 
         if (rightSubtree.getLeftSubtree() != null) {

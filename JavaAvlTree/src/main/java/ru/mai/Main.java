@@ -14,32 +14,49 @@ public class Main {
     private static final Random random = new Random();
 
     public static void main(String[] args) {
-        AssociativeContainer<Integer, Integer> avlTreeHeight = AssociativeContainerFactory.createAvlTreeHeight();
         AssociativeContainer<Integer, Integer> avlTreeFactor = AssociativeContainerFactory.createAvlTreeFactor();
-        System.out.print("AvlTreeHeight test - ");
-        testAvlTree(avlTreeHeight);
-        System.out.print("AvlTreeFactor test - ");
-        testAvlTree(avlTreeFactor);
+        testAvlTree();
     }
 
-    public static void testAvlTree(AssociativeContainer<Integer, Integer> avlTree) {
-        try {
+    public static void testAvlTree() {
+        for (int i = 0; i < 1000; i++) {
+            AssociativeContainer<Integer, Integer> avlTree = AssociativeContainerFactory.createAvlTreeFactor();
             List<Integer> keys = new ArrayList<>();
 
-            for (int i = 0; i < 10000; i++) {
-                int key = random.nextInt(100000);
-                keys.add(key);
-                avlTree.insert(key, 1);
-            }
+            try {
+                for (int j = 0; j < 100000; j++) {
+                    int key = getRandomKey();
 
-            for (Integer key : keys) {
-                avlTree.delete(key);
+                    if (avlTree.insert(key, 1)) {
+                        keys.add(key);
+                    }
+                }
+
+                for (int j = 0; j < keys.size(); j++) {
+                    avlTree.delete(keys.get(j));
+                }
+            } catch (Exception ex) {
+                System.out.println(ex.getMessage());
+                System.out.println(keys);
             }
-        } catch (Exception ex) {
-            System.out.println("FAIL");
         }
+    }
 
-        System.out.println("SUCCESS");
+    private static int getRandomKey() {
+        return random.nextInt(100);
     }
 
 }
+
+/*
+key = 4
+key = 29
+key = 86
+key = 30
+key = 80
+key = 27
+key = 16
+key = 5
+key = 37
+key = 48
+*/
