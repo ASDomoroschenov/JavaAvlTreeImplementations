@@ -9,12 +9,9 @@ import java.util.Random;
 
 public class Main {
 
-    //JavaAvlTreeImplementations
-
     private static final Random random = new Random();
 
     public static void main(String[] args) {
-        AssociativeContainer<Integer, Integer> avlTreeFactor = AssociativeContainerFactory.createAvlTreeFactor();
         testAvlTree();
     }
 
@@ -47,16 +44,3 @@ public class Main {
     }
 
 }
-
-/*
-key = 4
-key = 29
-key = 86
-key = 30
-key = 80
-key = 27
-key = 16
-key = 5
-key = 37
-key = 48
-*/

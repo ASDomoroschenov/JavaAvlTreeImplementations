@@ -173,60 +173,60 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
 
     @Override
     public void delete(K key) {
-        if (this.root.getLeftSubtree() == null && this.root.getRightSubtree() == null) {
-            System.out.println("LAST");
-        }
+        NodeHeight<K, V> currentNode = this.root;
 
-        NodeHeight<K, V> nodeToDelete = this.root;
-        NodeHeight<K, V> parent = null;
+        while (currentNode.getKey().compareTo(key) != 0) {
+            int compare = key.compareTo(currentNode.getKey());
 
-        while (nodeToDelete != null && !nodeToDelete.getKey().equals(key)) {
-            parent = nodeToDelete;
-            int compare = key.compareTo(nodeToDelete.getKey());
-
-            if (compare < 0) {
-                nodeToDelete = nodeToDelete.getLeftSubtree();
+            if (compare > 0) {
+                currentNode = currentNode.getRightSubtree();
             } else {
-                nodeToDelete = nodeToDelete.getRightSubtree();
+                currentNode = currentNode.getLeftSubtree();
             }
         }
 
-        if (nodeToDelete == null) {
-            return;
-        }
-
-        if (nodeToDelete.getLeftSubtree() == null || nodeToDelete.getRightSubtree() == null) {
-            NodeHeight<K, V> child = (nodeToDelete.getLeftSubtree() != null) ? nodeToDelete.getLeftSubtree() : nodeToDelete.getRightSubtree();
-
-            if (parent == null) {
-                this.root = child;
-            } else if (nodeToDelete == parent.getLeftSubtree()) {
-                parent.setLeftSubtree(child);
-            } else {
-                parent.setRightSubtree(child);
-            }
-
-            if (child != null) {
-                child.setParent(parent);
-            }
-
-            balance(parent);
+        if (currentNode.getRightSubtree() == null && currentNode.getLeftSubtree() == null) {
+            deleteLeaf(currentNode);
         } else {
-            NodeHeight<K, V> successor = nodeToDelete.getRightSubtree();
+            NodeHeight<K, V> nodeToSwap = currentNode;
 
-            while (successor.getLeftSubtree() != null) {
-                successor = successor.getLeftSubtree();
+            if (currentNode.getRightSubtree() == null && currentNode.getLeftSubtree() != null) {
+                currentNode = currentNode.getLeftSubtree();
+
+                while (currentNode.getRightSubtree() != null) {
+                    currentNode = currentNode.getRightSubtree();
+                }
+            } else {
+                currentNode = currentNode.getRightSubtree();
+
+                while (currentNode.getLeftSubtree() != null) {
+                    currentNode = currentNode.getLeftSubtree();
+                }
             }
 
-            K successorKey = successor.getKey();
-            V successorValue = successor.getValue();
+            K currentNodeKey = currentNode.getKey();
+            V currentNodeValue = currentNode.getValue();
 
-            delete(successorKey);
+            delete(currentNode.getKey());
 
-            nodeToDelete.setKey(successorKey);
-            nodeToDelete.setValue(successorValue);
+            nodeToSwap.setKey(currentNodeKey);
+            nodeToSwap.setValue(currentNodeValue);
+        }
+    }
 
-            balance(nodeToDelete);
+    private void deleteLeaf(NodeHeight<K, V> leafToDelete) {
+        NodeHeight<K, V> leafToDeleteParent = leafToDelete.getParent();
+
+        if (leafToDeleteParent != null) {
+            if (leafToDeleteParent.getLeftSubtree() == leafToDelete) {
+                leafToDeleteParent.setLeftSubtree(null);
+            } else {
+                leafToDeleteParent.setRightSubtree(null);
+            }
+
+            balance(leafToDeleteParent);
+        } else {
+            this.root = null;
         }
     }
 
@@ -282,31 +282,54 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
     }
 
     private NodeHeight<K, V> leftRotate(NodeHeight<K, V> subtree) {
+        NodeHeight<K, V> parentSubtree = subtree.getParent();
         NodeHeight<K, V> rightSubtree = subtree.getRightSubtree();
 
-        subtree.setRightSubtree(rightSubtree.getLeftSubtree());
+        if (parentSubtree != null) {
+            if (parentSubtree.getLeftSubtree() == subtree) {
+                parentSubtree.setLeftSubtree(rightSubtree);
+            } else {
+                parentSubtree.setRightSubtree(rightSubtree);
+            }
+        } else {
+            this.root = rightSubtree;
+        }
+
+        rightSubtree.setParent(parentSubtree);
 
         if (rightSubtree.getLeftSubtree() != null) {
             rightSubtree.getLeftSubtree().setParent(subtree);
         }
 
+        subtree.setRightSubtree(rightSubtree.getLeftSubtree());
         rightSubtree.setLeftSubtree(subtree);
-        rightSubtree.setParent(subtree.getParent());
         subtree.setParent(rightSubtree);
 
         return rightSubtree;
     }
 
     private NodeHeight<K, V> rightRotate(NodeHeight<K, V> subtree) {
+        NodeHeight<K, V> parentSubtree = subtree.getParent();
         NodeHeight<K, V> leftSubtree = subtree.getLeftSubtree();
-        subtree.setLeftSubtree(leftSubtree.getRightSubtree());
+
+        if (parentSubtree != null) {
+            if (parentSubtree.getLeftSubtree() == subtree) {
+                parentSubtree.setLeftSubtree(leftSubtree);
+            } else {
+                parentSubtree.setRightSubtree(leftSubtree);
+            }
+        } else {
+            this.root = leftSubtree;
+        }
+
+        leftSubtree.setParent(parentSubtree);
 
         if (leftSubtree.getRightSubtree() != null) {
             leftSubtree.getRightSubtree().setParent(subtree);
         }
 
+        subtree.setLeftSubtree(leftSubtree.getRightSubtree());
         leftSubtree.setRightSubtree(subtree);
-        leftSubtree.setParent(subtree.getParent());
         subtree.setParent(leftSubtree);
 
         return leftSubtree;
