@@ -239,12 +239,6 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
 
         fixHeight(subtree);
 
-        int heightAfter = subtree.getHeight();
-
-        if (heightBefore == heightAfter) {
-            return;
-        }
-
         NodeHeight<K, V> parent = subtree.getParent();
         boolean isLeftSubtree = parent != null && parent.getLeftSubtree() == subtree;
         int balanceFactor = balanceFactor(subtree);
@@ -285,7 +279,9 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
             this.root = subtree;
         }
 
-        balance(subtree.getParent());
+        if (heightBefore != subtree.getHeight()) {
+            balance(subtree.getParent());
+        }
     }
 
     private NodeHeight<K, V> leftRotate(NodeHeight<K, V> subtree) {
