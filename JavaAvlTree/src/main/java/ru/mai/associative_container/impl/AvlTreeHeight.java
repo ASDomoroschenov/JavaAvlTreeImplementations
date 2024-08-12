@@ -235,35 +235,42 @@ public class AvlTreeHeight<K extends Comparable<K>, V> implements AssociativeCon
             return;
         }
 
+        int heightBefore = subtree.getHeight();
+
         fixHeight(subtree);
+
+        int heightAfter = subtree.getHeight();
+
+        if (heightBefore == heightAfter) {
+            return;
+        }
+
         NodeHeight<K, V> parent = subtree.getParent();
         boolean isLeftSubtree = parent != null && parent.getLeftSubtree() == subtree;
         int balanceFactor = balanceFactor(subtree);
 
         if (balanceFactor == 2) {
             if (balanceFactor(subtree.getLeftSubtree()) < 0) {
-                subtree.setLeftSubtree(leftRotate(subtree.getLeftSubtree()));
-                fixHeight(subtree.getLeftSubtree().getRightSubtree());
-                fixHeight(subtree.getLeftSubtree());
-                fixHeight(subtree);
+                NodeHeight<K, V> leftRotate = leftRotate(subtree.getLeftSubtree());
+                fixHeight(leftRotate.getLeftSubtree());
+                fixHeight(leftRotate);
+                subtree.setLeftSubtree(leftRotate);
             }
 
             subtree = rightRotate(subtree);
-            fixHeight(subtree.getRightSubtree().getLeftSubtree());
             fixHeight(subtree.getRightSubtree());
             fixHeight(subtree);
         }
 
         if (balanceFactor == -2) {
             if (balanceFactor(subtree.getRightSubtree()) > 0) {
-                subtree.setRightSubtree(rightRotate(subtree.getRightSubtree()));
-                fixHeight(subtree.getRightSubtree().getLeftSubtree());
-                fixHeight(subtree.getRightSubtree());
-                fixHeight(subtree);
+                NodeHeight<K, V> rightRotate = rightRotate(subtree.getRightSubtree());
+                fixHeight(rightRotate.getRightSubtree());
+                fixHeight(rightRotate);
+                subtree.setRightSubtree(rightRotate);
             }
 
             subtree = leftRotate(subtree);
-            fixHeight(subtree.getLeftSubtree().getRightSubtree());
             fixHeight(subtree.getLeftSubtree());
             fixHeight(subtree);
         }
